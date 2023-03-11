@@ -27,7 +27,8 @@
 				"ZainChen.json",
 				"mikestead.dotenv",
 				"hediet.vscode-drawio",
-				"tamasfe.even-better-toml"
+				"tamasfe.even-better-toml",
+				"mechatroner.rainbow-csv"
 			],
 			
 			"settings": {
