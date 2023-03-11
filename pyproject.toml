@@ -12,7 +12,7 @@ pytest = "^5.2"
 pre-commit = "^2.17.0"
 ipykernel = "^6.21.0"
 black = "21.12b0"        # code formatting
-isort = "5.10.1"       # import sorting
+isort = "5.12.0"       # import sorting
 flake8 = "4.0.1"       # code analysis
 
 [build-system]
