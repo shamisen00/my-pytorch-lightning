@@ -5,7 +5,29 @@ description = ""
 authors = ["Your Name <you@example.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "3.9.0"
+
+# --------- pytorch --------- #
+torch = {url = "https://download.pytorch.org/whl/cu116/torch-1.12.1%2Bcu116-cp39-cp39-linux_x86_64.whl"}
+torchvision = "^0.13.0"
+pytorch-lightning ="^1.9.1"
+torchmetrics = "^0.11.0"
+
+# --------- hydra --------- #
+hydra-core = "^1.3.2"
+hydra-colorlog ="^1.2.0"
+hydra-optuna-sweeper = "^1.2.0"
+
+# --------- loggers --------- #
+# wandb
+# neptune-client
+mlflow = "^2.0" # requires numba
+# comet-ml
+
+# --------- others --------- #
+pyrootutils = "^1.0.4"    # standardizing the project root setup
+rich ="^13.0"   # beautiful text formatting in terminal
+llvmlite = "0.31.0" # https://zenn.dev/iimuz/articles/ccdcf54829058cedf3d3 (for numba)
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
