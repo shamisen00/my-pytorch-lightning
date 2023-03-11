@@ -11,7 +11,7 @@ python = "^3.8"
 pytest = "^5.2"
 pre-commit = "^2.17.0"
 ipykernel = "^6.21.0"
-black = "21.12b0"        # code formatting
+black = "23.1.0"        # code formatting
 isort = "5.10.1"       # import sorting
 flake8 = "4.0.1"       # code analysis
 
