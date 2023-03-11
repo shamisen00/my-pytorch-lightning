@@ -1,3 +1,24 @@
+[tool.poetry]
+name = "src"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+pre-commit = "^2.17.0"
+ipykernel = "^6.21.0"
+black = "21.12b0"        # code formatting
+isort = "5.10.1"       # import sorting
+flake8 = "4.0.1"       # code analysis
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.pytest.ini_options]
 addopts = [
   "--color=yes",
