@@ -1,5 +1,7 @@
 {
     "python.linting.flake8Args": [
         "--max-line-length=120"
-    ]
+    ],
+    "files.eol": "\n",
+    "editor.unfoldOnClickAfterEndOfLine": true
 }
