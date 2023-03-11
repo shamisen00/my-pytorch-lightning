@@ -45,6 +45,3 @@ RUN source ~/.bashrc \
     && curl -sSL https://install.python-poetry.org | POETRY_HOME=/etc/poetry python3 - 
 
 ENV POETRY_VIRTUALENVS_CREATE=false
-
-COPY ./pyproject.toml ./pyproject.toml
-RUN poetry install
