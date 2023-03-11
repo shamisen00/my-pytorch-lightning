@@ -26,7 +26,8 @@
 				"Gruntfuggly.todo-tree",
 				"ZainChen.json",
 				"mikestead.dotenv",
-				"hediet.vscode-drawio"
+				"hediet.vscode-drawio",
+				"tamasfe.even-better-toml"
 			],
 			
 			"settings": {
