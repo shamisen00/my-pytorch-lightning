@@ -1,0 +1,56 @@
+{
+	"name": "python-dev",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "dev",
+	"workspaceFolder": "/workspace",
+
+	// Add the IDs of extensions you want installed when the container is created.
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {		
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+				"ms-python.python",
+				"eamodio.gitlens",
+				"mhutchie.git-graph",
+				"GitHub.vscode-pull-request-github",
+				"GitHub.copilot",
+				"GitHub.copilot-labs",
+				"gencay.vscode-chatgpt",
+				"njpwerner.autodocstring",
+				"MS-vsliveshare.vsliveshare-pack",
+				"yzhang.markdown-all-in-one",
+				"ms-vscode-remote.remote-containers",
+				"CodeStream.codestream",
+				"GitHub.github-vscode-theme",
+				"Gruntfuggly.todo-tree",
+				"ZainChen.json",
+				"mikestead.dotenv",
+				"hediet.vscode-drawio"
+			],
+			
+			"settings": {
+				"python.linting.enabled": true,
+				"python.linting.lintOnSave": true,
+				// Pylance
+				"python.languageServer": "Pylance",
+				// Linter(flake8)
+				"python.linting.flake8Path": "/usr/local/bin/flake8",
+				"python.linting.pylintEnabled": false,
+				"python.linting.flake8Enabled": true,
+				// Formatter(black)
+				"python.formatting.blackPath": "/usr/local/bin/black",
+				"python.formatting.provider": "black",
+				"python.formatting.blackArgs": [
+					"--line-length=79"
+				],
+				"[python]": {
+					"editor.formatOnSave": true
+				}
+			}
+		}
+	}
+
+	// Comment out connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+	// "remoteUser": "vscode",
+}
