@@ -4,3 +4,5 @@
 python3 src/train.py data.num_workers=20 trainer.max_epochs=5 logger=csv
 
 python3 src/train.py data.num_workers=20 trainer.max_epochs=5 debug=profiler
+
+python3 src/train_cli.py fit --trainer.logger false --trainer.max_epochs 5
