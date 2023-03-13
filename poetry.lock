@@ -781,6 +781,18 @@ websocket-client = ">=0.32.0"
 ssh = ["paramiko (>=2.4.3)"]
 
 [[package]]
+name = "docstring-parser"
+version = "0.15"
+description = "Parse Python docstrings in reST, Google and Numpydoc format"
+category = "main"
+optional = false
+python-versions = ">=3.6,<4.0"
+files = [
+    {file = "docstring_parser-0.15-py3-none-any.whl", hash = "sha256:d1679b86250d269d06a99670924d6bce45adc00b08069dae8c47d98e89b667a9"},
+    {file = "docstring_parser-0.15.tar.gz", hash = "sha256:48ddc093e8b1865899956fcc03b03e66bb7240c310fac5af81814580c55bf682"},
+]
+
+[[package]]
 name = "entrypoints"
 version = "0.4"
 description = "Discover and load entry points from installed packages."
@@ -1403,6 +1415,44 @@ files = [
     {file = "joblib-1.2.0-py3-none-any.whl", hash = "sha256:091138ed78f800342968c523bdde947e7a305b8594b910a0fea2ab83c3c6d385"},
     {file = "joblib-1.2.0.tar.gz", hash = "sha256:e1cee4a79e4af22881164f218d4311f60074197fb707e082e803b61f6d137018"},
 ]
+
+[[package]]
+name = "jsonargparse"
+version = "4.20.0"
+description = "Implement minimal boilerplate CLIs derived from type hints and parse from command line, config files and environment variables."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "jsonargparse-4.20.0-py3-none-any.whl", hash = "sha256:b42548a3ab7edc9108b40269109c43ba6973e523fa6ba6ff5f9e7583dd2e46fa"},
+    {file = "jsonargparse-4.20.0.tar.gz", hash = "sha256:d2a7a7b7acdc564a4e7b33bf51c1703f7b730d3579d5190b3adaae456af3e517"},
+]
+
+[package.dependencies]
+docstring-parser = {version = ">=0.15", optional = true, markers = "extra == \"signatures\""}
+PyYAML = ">=3.13"
+typeshed-client = {version = ">=2.1.0", optional = true, markers = "extra == \"signatures\""}
+
+[package.extras]
+all = ["argcomplete (>=2.0.0)", "docstring-parser (>=0.15)", "fsspec (>=0.8.4)", "jsonnet (>=0.13.0)", "jsonnet-binary (>=0.17.0)", "jsonschema (>=3.2.0)", "omegaconf (>=2.1.1)", "reconplogger (>=4.4.0)", "requests (>=2.18.4)", "ruyaml (>=0.20.0)", "typeshed-client (>=2.1.0)", "typing-extensions (>=3.10.0.0)"]
+argcomplete = ["argcomplete (>=2.0.0)"]
+dev = ["Sphinx (>=1.7.9)", "autodocsumm (>=0.1.10)", "coverage (>=4.5.1)", "mypy (>=0.701)", "pre-commit (>=2.19.0)", "pycodestyle (>=2.5.0)", "pylint (>=2.15.6)", "responses (>=0.12.0)", "sphinx-autodoc-typehints (>=1.19.5)", "sphinx-rtd-theme (>=0.4.3)", "tox (>=3.25.0)", "types-PyYAML (>=6.0.11)", "types-requests (>=2.28.9)"]
+doc = ["Sphinx (>=1.7.9)", "autodocsumm (>=0.1.10)", "sphinx-autodoc-typehints (>=1.19.5)", "sphinx-rtd-theme (>=0.4.3)"]
+fsspec = ["fsspec (>=0.8.4)"]
+jsonnet = ["jsonnet (>=0.13.0)", "jsonnet-binary (>=0.17.0)"]
+jsonschema = ["jsonschema (>=3.2.0)"]
+maintainer = ["bump2version (>=0.5.11)"]
+mypy = ["mypy (>=0.701)", "types-PyYAML (>=6.0.11)"]
+omegaconf = ["omegaconf (>=2.1.1)"]
+pylint = ["pylint (>=2.15.6)"]
+reconplogger = ["reconplogger (>=4.4.0)"]
+ruyaml = ["ruyaml (>=0.20.0)"]
+signatures = ["docstring-parser (>=0.15)", "typeshed-client (>=2.1.0)"]
+test = ["coverage (>=4.5.1)", "responses (>=0.12.0)", "types-PyYAML (>=6.0.11)", "types-requests (>=2.28.9)"]
+test-no-urls = ["coverage (>=4.5.1)"]
+types-pyyaml = ["types-PyYAML (>=6.0.11)"]
+typing-extensions = ["typing-extensions (>=3.10.0.0)"]
+urls = ["requests (>=2.18.4)"]
 
 [[package]]
 name = "jupyter-client"
@@ -2753,10 +2803,16 @@ files = [
 
 [package.dependencies]
 fsspec = {version = ">2021.06.0", extras = ["http"]}
+hydra-core = {version = ">=1.0.5", optional = true, markers = "extra == \"extra\""}
+jsonargparse = {version = ">=4.18.0", extras = ["signatures"], optional = true, markers = "extra == \"extra\""}
 lightning-utilities = ">=0.6.0.post0"
+matplotlib = {version = ">3.1", optional = true, markers = "extra == \"extra\""}
 numpy = ">=1.17.2"
+omegaconf = {version = ">=2.0.5", optional = true, markers = "extra == \"extra\""}
 packaging = ">=17.1"
 PyYAML = ">=5.4"
+rich = {version = ">=10.14.0,<10.15.0.a || >10.15.0.a", optional = true, markers = "extra == \"extra\""}
+tensorboardX = {version = ">=2.2", optional = true, markers = "extra == \"extra\""}
 torch = ">=1.10.0"
 torchmetrics = ">=0.7.0"
 tqdm = ">=4.57.0"
@@ -3337,6 +3393,23 @@ files = [
 widechars = ["wcwidth"]
 
 [[package]]
+name = "tensorboardx"
+version = "2.5"
+description = "TensorBoardX lets you watch Tensors Flow without Tensorflow"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "tensorboardX-2.5-py2.py3-none-any.whl", hash = "sha256:b1d8903f8106e2f4484640a293f9680f9757d5f7d2e699e0672bb2382d988e07"},
+    {file = "tensorboardX-2.5.tar.gz", hash = "sha256:5238ac5eac4a26d8f8381d7f54a2fcd530a134db841af9a9a6427beca93c6776"},
+]
+
+[package.dependencies]
+numpy = "*"
+protobuf = ">=3.8.0"
+six = "*"
+
+[[package]]
 name = "threadpoolctl"
 version = "3.1.0"
 description = "threadpoolctl"
@@ -3377,6 +3450,7 @@ typing-extensions = "*"
 [package.source]
 type = "url"
 url = "https://download.pytorch.org/whl/cu116/torch-1.12.1%2Bcu116-cp39-cp39-linux_x86_64.whl"
+
 [[package]]
 name = "torchmetrics"
 version = "0.11.4"
@@ -3499,6 +3573,21 @@ files = [
 [package.extras]
 docs = ["myst-parser", "pydata-sphinx-theme", "sphinx"]
 test = ["argcomplete (>=2.0)", "pre-commit", "pytest", "pytest-mock"]
+
+[[package]]
+name = "typeshed-client"
+version = "2.2.0"
+description = "A library for accessing stubs in typeshed."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "typeshed_client-2.2.0-py3-none-any.whl", hash = "sha256:6f5a5841a0cf664ac66ea05f1ed3372a191d307b146f8b9aaa09719d1156626e"},
+    {file = "typeshed_client-2.2.0.tar.gz", hash = "sha256:57baebdd5312486e438393e2971043d487c0c331404b73fe72d1f22ba0a5992d"},
+]
+
+[package.dependencies]
+importlib-resources = ">=1.4.0"
 
 [[package]]
 name = "typing-extensions"
@@ -3720,4 +3809,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "3.9.0"
-content-hash = "2c5b8949dfe4c9a42b6ffa9804568f8dde822d8608a941f7894bb98ff70db001"
+content-hash = "bf97f66131855d33e719801c9c0e7c90c8537bbf2c537fc6b59c35cc0f19c73c"
