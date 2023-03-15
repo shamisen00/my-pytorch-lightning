@@ -1,6 +1,7 @@
 from typing import Any, List
 
 import torch
+import torch.nn as nn
 from pytorch_lightning import LightningModule
 from torchmetrics import MaxMetric, MeanMetric
 from torchmetrics.classification.accuracy import Accuracy
@@ -23,17 +24,17 @@ class MNISTLitModule(LightningModule):
 
     def __init__(
         self,
-        net: torch.nn.Module,
-        optimizer: torch.optim.Optimizer,
-        scheduler: torch.optim.lr_scheduler,
+        input_size: int = 784,
+        lin1_size: int = 256,
+        lin2_size: int = 256,
+        lin3_size: int = 256,
+        output_size: int = 10,
     ):
         super().__init__()
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
-
-        self.net = net
 
         # loss function
         self.criterion = torch.nn.CrossEntropyLoss()
@@ -51,8 +52,26 @@ class MNISTLitModule(LightningModule):
         # for tracking best so far validation accuracy
         self.val_acc_best = MaxMetric()
 
+        self.model = nn.Sequential(
+            nn.Linear(input_size, lin1_size),
+            nn.BatchNorm1d(lin1_size),
+            nn.ReLU(),
+            nn.Linear(lin1_size, lin2_size),
+            nn.BatchNorm1d(lin2_size),
+            nn.ReLU(),
+            nn.Linear(lin2_size, lin3_size),
+            nn.BatchNorm1d(lin3_size),
+            nn.ReLU(),
+            nn.Linear(lin3_size, output_size),
+        )
+
     def forward(self, x: torch.Tensor):
-        return self.net(x)
+        batch_size, channels, width, height = x.size()
+
+        # (batch, 1, width, height) -> (batch, 1*width*height)
+        x = x.view(batch_size, -1)
+
+        return self.model(x)
 
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
@@ -133,19 +152,9 @@ class MNISTLitModule(LightningModule):
         Examples:
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer = self.hparams.optimizer(params=self.parameters())
-        if self.hparams.scheduler is not None:
-            scheduler = self.hparams.scheduler(optimizer=optimizer)
-            return {
-                "optimizer": optimizer,
-                "lr_scheduler": {
-                    "scheduler": scheduler,
-                    "monitor": "val/loss",
-                    "interval": "epoch",
-                    "frequency": 1,
-                },
-            }
-        return {"optimizer": optimizer}
+        optimizer = torch.optim.Adam(params=self.parameters(), lr=0.1)
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1)
+        return ([optimizer], [lr_scheduler])
 
 
 if __name__ == "__main__":
