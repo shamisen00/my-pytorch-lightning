@@ -4,3 +4,9 @@ data:
   class_path: src.data.mnist_datamodule.MNISTDataModule
   init_args:
     data_dir: /workspace/data/
+trainer:
+  logger:
+    class_path: pytorch_lightning.loggers.MLFlowLogger
+    init_args:
+      save_dir: ./lightning_logs/mlruns
+  max_epochs: 2
