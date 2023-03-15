@@ -151,5 +151,5 @@ dmypy.json
 configs/local/default.yaml
 /data/
 /logs/
-/lightning_logs/logs/
+/lightning_logs/
 .env
