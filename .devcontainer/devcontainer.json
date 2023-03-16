@@ -28,7 +28,13 @@
 				"mikestead.dotenv",
 				"hediet.vscode-drawio",
 				"tamasfe.even-better-toml",
-				"mechatroner.rainbow-csv"
+				"mechatroner.rainbow-csv",
+				"usernamehw.errorlens",
+				"GrapeCity.gc-excelviewer",
+				"streetsidesoftware.code-spell-checker",
+				"ms-python.flake8",
+				"shd101wyy.markdown-preview-enhanced",
+				"christian-kohler.path-intellisense"
 			],
 			
 			"settings": {

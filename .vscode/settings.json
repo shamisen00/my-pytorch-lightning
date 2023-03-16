@@ -3,5 +3,15 @@
         "--max-line-length=120"
     ],
     "files.eol": "\n",
-    "editor.unfoldOnClickAfterEndOfLine": true
+    "editor.unfoldOnClickAfterEndOfLine": true,
+    "editor.renderControlCharacters": true,
+    "files.insertFinalNewline": true,
+    "python.formatting.provider": "black",
+    "python.linting.mypyEnabled": true,
+    "python.linting.mypyPath": "/usr/local/bin/mypy",
+    "python.linting.flake8Path": "/usr/local/bin/flake8",
+    "python.formatting.blackPath": "/usr/local/bin/black",
+    "isort.path": [
+        "/usr/local/bin/isort"
+    ],
 }
