@@ -4,7 +4,8 @@ import hydra
 import pyrootutils
 import pytorch_lightning as pl
 from omegaconf import DictConfig
-from pytorch_lightning import Callback, LightningDataModule, LightningModule, Trainer
+from pytorch_lightning import (Callback, LightningDataModule, LightningModule,
+                               Trainer)
 from pytorch_lightning.loggers import Logger
 
 pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
@@ -25,7 +26,7 @@ pyrootutils.setup_root(__file__, indicator=".project-root", pythonpath=True)
 # more info: https://github.com/ashleve/pyrootutils
 # ------------------------------------------------------------------------------------ #
 
-from src import utils
+from src import utils  # TODO: E402
 
 log = utils.get_pylogger(__name__)
 
