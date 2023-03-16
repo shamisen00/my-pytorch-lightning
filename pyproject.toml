@@ -36,6 +36,7 @@ ipykernel = "^6.21.0"
 black = "21.12b0"        # code formatting
 isort = "5.10.1"       # import sorting
 flake8 = "4.0.1"       # code analysis
+mypy = "^1.1.1"        # static type checking
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
