@@ -28,6 +28,7 @@ mlflow = "^2.0" # requires numba
 pyrootutils = "^1.0.4"    # standardizing the project root setup
 rich ="^13.0"   # beautiful text formatting in terminal
 llvmlite = "0.31.0" # https://zenn.dev/iimuz/articles/ccdcf54829058cedf3d3 (for numba)
+# webdataset     If you want to serialize data
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
