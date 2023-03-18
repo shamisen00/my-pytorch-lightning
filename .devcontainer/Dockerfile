@@ -6,6 +6,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 SHELL ["/bin/bash", "-c"]
 
+WORKDIR /workspace
+
 RUN apt update && apt install -y \
     wget \
     git \
