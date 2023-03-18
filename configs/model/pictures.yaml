@@ -1,0 +1,19 @@
+_target_: src.models.picture_module.PictureModule
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.001
+  weight_decay: 0.0
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+  _partial_: true
+  mode: min
+  factor: 0.1
+  patience: 10
+
+net:
+  _target_: src.models.components.picture_net.PictureNet
+  feature_size: 16
+  hidden_ch: [8, 4]
