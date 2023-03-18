@@ -3,7 +3,10 @@ import warnings
 from importlib.util import find_spec
 from pathlib import Path
 from typing import Any, Callable, Dict, List
+import random
 
+from tqdm.auto import tqdm
+import webdataset as wds
 import hydra
 from omegaconf import DictConfig
 from pytorch_lightning import Callback
@@ -212,3 +215,42 @@ def save_file(path: str, content: str) -> None:
     """Save file in rank zero mode (only on one process in multi-GPU setup)."""
     with open(path, "w+") as file:
         file.write(content)
+
+@rank_zero_only
+def create_wds(cfg: DictConfig) -> None:
+    """Creates wds dataset in `cfg.data.datasets`."""
+
+    dataset_root = Path(cfg.paths.data_dir)
+    shard_path = dataset_root / 'shards'
+
+    if not shard_path.exists():
+        shard_size = cfg.data.shard_size * 1000**2
+
+        file_paths = [path for path in (dataset_root / 'train').glob('*')]
+
+        random.shuffle(file_paths)
+
+        shard_path.mkdir(exist_ok=True)
+        shard_filename = str(shard_path / 'shards-%05d.tar')
+
+        with wds.ShardWriter(shard_filename, maxsize=shard_size) as sink, tqdm(file_paths) as pbar:
+
+            for file_path in pbar:
+
+                key_str = file_path.stem
+
+                gt_file_path = str(dataset_root / 'gt' / f'{key_str}.jpg')
+
+                with open(file_path, 'rb') as raw_bytes:
+                    train_buffer = raw_bytes.read()
+
+                with open(gt_file_path, 'rb') as raw_bytes:
+                    gt_buffer = raw_bytes.read()
+
+                sink.write({
+                    "__key__": key_str,
+                    "train.jpg": train_buffer,
+                    "gt.jpg": gt_buffer,
+                })
+    else:
+        pass
