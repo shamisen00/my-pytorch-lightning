@@ -6,12 +6,12 @@ from typing import Any, Callable, Dict, List
 import random
 
 from tqdm.auto import tqdm
-import webdataset as wds
 import hydra
 from omegaconf import DictConfig
 from pytorch_lightning import Callback
 from pytorch_lightning.loggers import Logger
 from pytorch_lightning.utilities import rank_zero_only
+# import webdataset as wds
 
 from src.utils import pylogger, rich_utils
 
