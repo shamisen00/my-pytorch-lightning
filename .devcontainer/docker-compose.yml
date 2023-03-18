@@ -7,6 +7,13 @@ services:
     build:
       context: ..
       dockerfile: .devcontainer/Dockerfile
+    
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
 
     volumes:
       # Forwards the local Docker socket to the container.
