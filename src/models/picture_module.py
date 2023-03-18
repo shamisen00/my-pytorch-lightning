@@ -43,7 +43,7 @@ class PictureModule(LightningModule):
 
     def forward(self, x: torch.Tensor):
         return self.net(x)
-    
+
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
         # so it's worth to make sure validation metrics don't store results from these checks
@@ -104,7 +104,3 @@ class PictureModule(LightningModule):
                 },
             }
         return {"optimizer": optimizer},
-
-
-if __name__ == "__main__":
-    _ = MNISTLitModule(None, None, None)

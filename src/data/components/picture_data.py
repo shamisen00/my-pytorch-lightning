@@ -50,5 +50,6 @@ class PictureDataset(Dataset):
 
         return train_image, gt_image
 
+
 if __name__ == "__main__":
     _ = PictureDataset()

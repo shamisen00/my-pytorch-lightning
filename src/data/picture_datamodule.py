@@ -4,8 +4,6 @@ from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset, random_split
 from torchvision.transforms import transforms
 
-from src.data.components.picture_data import PictureDataset
-
 
 class PictureDataModule(LightningDataModule):
     """Example of LightningDataModule for MNIST dataset.
@@ -67,9 +65,8 @@ class PictureDataModule(LightningDataModule):
         careful not to execute things like random split twice!
         """
 
-        # self.image_dataset = PictureDataset(self.hparams.data_dir, transform=self.hparams.transforms)
         self.image_dataset = self.hparams.dataset
-        
+
         val_size = int(len(self.image_dataset) * self.hparams.val_split)
         test_size = int(len(self.image_dataset) * self.hparams.test_split)
         train_size = len(self.image_dataset) - val_size - test_size
