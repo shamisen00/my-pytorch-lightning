@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 import torchvision
 from torchvision.utils import save_image
 from torch.utils.data import DataLoader
-
+from torchvision import transforms
 
 class SaveImages(pl.callbacks.Callback):
     def __init__(
@@ -56,20 +56,5 @@ class SaveImages(pl.callbacks.Callback):
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
         images = self._to_grid(outputs["targets"])
-        save_image(images, f"./data/output/image{trainer.current_epoch}.jpg")
-    # def on_validation_epoch_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule) -> None:
-
-    #     images, _ = next(iter(DataLoader(trainer.datamodule.val, batch_size=self.num_samples)))
-    #     images_flattened = images.view(images.size(0), -1)
-
-    #     # generate images
-    #     with torch.no_grad():
-    #         pl_module.eval()
-    #         images_generated = pl_module(images_flattened.to(pl_module.device))
-    #         pl_module.train()
-
-    #     str_title = f"{pl_module.__class__.__name__}_images"
-    #     if trainer.current_epoch == 0:
-    #         trainer.logger.log_image("original", images=[self._to_grid(images)])
-                    
-    #     trainer.logger.log_image(str_title + f"{trainer.current_epoch}", images=[self._to_grid(images_generated.reshape(images.shape))])
+        trainer.logger.experiment.log_image(trainer.logger.run_id, image=transforms.ToPILImage()(images), artifact_file="dir/image.png")
+        #save_image(images, path + f"/image{trainer.current_epoch}.jpg")
