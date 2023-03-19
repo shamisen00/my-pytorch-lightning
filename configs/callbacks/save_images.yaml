@@ -1,0 +1,8 @@
+SaveImages:
+  _target_: src.callbacks.save_images.SaveImages
+  num_samples: 4
+  nrow: 8
+  padding: 2
+  normalize: True
+  scale_each: False
+  pad_value: 0
