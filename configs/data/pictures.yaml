@@ -1,11 +1,11 @@
 _target_: src.data.picture_datamodule.PictureDataModule
 
-dataset:
-  _target_: src.data.components.picture_data.PictureDataset
-  data_dir: "/workspace/data"
+# dataset:
+#   _target_: src.data.components.picture_data.PictureDataset
+#   data_dir: "/workspace/data"
 
 data_dir: ${paths.data_dir}
-batch_size: 1
+batch_size: 8
 val_split: 0.1
 test_split: 0.1
 num_workers: 1
