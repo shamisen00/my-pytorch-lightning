@@ -23,8 +23,8 @@ class PictureModule(LightningModule):
     def __init__(
         self,
         net: torch.nn.Module,
-        optimizer: torch.optim.Optimizer,
-        scheduler: torch.optim.lr_scheduler,
+        scheduler,
+        lr: float = 1e-1,
     ):
         super().__init__()
 
@@ -91,16 +91,7 @@ class PictureModule(LightningModule):
         Examples:
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
-        optimizer = self.hparams.optimizer(params=self.parameters())
-        if self.hparams.scheduler is not None:
-            scheduler = self.hparams.scheduler(optimizer=optimizer)
-            return {
-                "optimizer": optimizer,
-                "lr_scheduler": {
-                    "scheduler": scheduler,
-                    "monitor": "val/loss",
-                    "interval": "epoch",
-                    "frequency": 1,
-                },
-            }
-        return {"optimizer": optimizer},
+        optimizer = torch.optim.Adam(params=self.parameters(), lr=self.hparams.lr)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1)
+
+        return ([optimizer], [scheduler])

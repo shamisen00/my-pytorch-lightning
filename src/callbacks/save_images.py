@@ -8,7 +8,6 @@ from torchvision import transforms
 class SaveImages(pl.callbacks.Callback):
     def __init__(
         self,
-        dirpath: str,
         num_samples: int = 16,
         nrow: int = 8,
         padding: int = 2,
@@ -34,7 +33,6 @@ class SaveImages(pl.callbacks.Callback):
         """
 
         super().__init__()
-        self.dirpath = dirpath
         self.num_samples = num_samples
         self.nrow = nrow
         self.padding = padding

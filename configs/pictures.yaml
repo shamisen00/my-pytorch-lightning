@@ -1,0 +1,29 @@
+model:
+  class_path: src.models.picture_module.PictureModule
+  init_args:
+    net: src.models.components.picture_net.PictureNet
+    scheduler: torch.optim.lr_scheduler.StepLR
+    # optimizer: torch.optim.Adam
+data:
+  class_path: src.data.picture_datamodule.PictureDataModule
+  init_args:
+    dataset: src.data.components.picture_data.PictureDataset
+    data_dir: /workspace/data/
+    batch_size: 1
+trainer:
+  logger:
+    class_path: pytorch_lightning.loggers.MLFlowLogger
+    init_args:
+      save_dir: ./logs/mlflow/mlruns
+  callbacks:
+    class_path: src.callbacks.save_images.SaveImages
+    init_args:
+      num_samples: 4
+      nrow: 8
+      padding: 2
+      normalize: True
+      scale_each: False
+      pad_value: 0
+  max_epochs: 2
+  accelerator: gpu
+  devices: 1
