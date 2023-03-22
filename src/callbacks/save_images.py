@@ -1,15 +1,14 @@
 from typing import Optional, Tuple
 
-import torch
 import pytorch_lightning as pl
 import torchvision
-from torchvision.utils import save_image
-from torch.utils.data import DataLoader
 from torchvision import transforms
+
 
 class SaveImages(pl.callbacks.Callback):
     def __init__(
         self,
+        dirpath: str,
         num_samples: int = 16,
         nrow: int = 8,
         padding: int = 2,
@@ -35,6 +34,7 @@ class SaveImages(pl.callbacks.Callback):
         """
 
         super().__init__()
+        self.dirpath = dirpath
         self.num_samples = num_samples
         self.nrow = nrow
         self.padding = padding
@@ -56,5 +56,11 @@ class SaveImages(pl.callbacks.Callback):
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
         images = self._to_grid(outputs["targets"])
-        trainer.logger.experiment.log_image(trainer.logger.run_id, image=transforms.ToPILImage()(images), artifact_file="dir/image.png")
-        #save_image(images, path + f"/image{trainer.current_epoch}.jpg")
+
+        to_pil = transforms.ToPILImage()
+
+        trainer.logger.experiment.log_image(
+            trainer.logger.run_id,
+            image=to_pil(images),
+            artifact_file=f"image{trainer.current_epoch}.jpg"
+            )

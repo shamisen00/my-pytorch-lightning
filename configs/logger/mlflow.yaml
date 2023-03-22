@@ -8,5 +8,5 @@ mlflow:
   tags: null
   # save_dir: "./mlruns"
   prefix: ""
-  artifact_location: "artifact"
+  artifact_location: ${hydra:runtime.output_dir}  # 何故かmlflow dirの中に設定できない 
   #run_id: ""
