@@ -36,6 +36,8 @@ RUN wget https://www.python.org/ftp/python/3.9.0/Python-3.9.0.tar.xz \
     && make -j 8 \
     && make install
 
+ENV PYTHONPATH=/workspace:$PYTHONPATH
+
 ENV PATH /etc/poetry/bin:$PATH
 
 RUN source ~/.bashrc \
