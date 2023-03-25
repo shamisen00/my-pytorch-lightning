@@ -1,8 +1,7 @@
 from typing import Any, Dict, Optional
 
 from pytorch_lightning import LightningDataModule
-from torch.utils.data import DataLoader, Dataset, random_split
-from torchvision.transforms import transforms
+from torch.utils.data import DataLoader, Dataset
 
 
 class PictureDataModule(LightningDataModule):
@@ -35,18 +34,11 @@ class PictureDataModule(LightningDataModule):
 
     def __init__(
         self,
-        dataset: Dataset = None,
-        data_dir: str = "/workspace/data",
-        val_split: float = 0.1,
-        test_split: float = 0.1,
+        train_dataset: Optional[Dataset] = None,
+        val_dataset: Optional[Dataset] = None,
         batch_size: int = 8,
         num_workers: int = 2,
         pin_memory: bool = False,
-        transform: Optional[transforms.Compose] = transforms.Compose(
-            [transforms.ToTensor(),
-             transforms.Resize((480, 480)),
-             transforms.Normalize((0.1307,), (0.3081,))]
-        ),
     ):
         super().__init__()
 
@@ -54,25 +46,9 @@ class PictureDataModule(LightningDataModule):
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False)
 
-        self.train_set: Optional[Dataset] = None
-        self.val_set: Optional[Dataset] = None
+        self.train_set: Optional[Dataset] = train_dataset
+        self.val_set: Optional[Dataset] = val_dataset
         self.test_set: Optional[Dataset] = None
-
-    def setup(self, stage: Optional[str] = None):
-        """Load data. Set variables: `self.data_train`, `self.data_val`, `self.data_test`.
-
-        This method is called by lightning with both `trainer.fit()` and `trainer.test()`, so be
-        careful not to execute things like random split twice!
-        """
-
-        self.image_dataset = self.hparams.dataset
-
-        val_size = int(len(self.image_dataset) * self.hparams.val_split)
-        test_size = int(len(self.image_dataset) * self.hparams.test_split)
-        train_size = len(self.image_dataset) - val_size - test_size
-        self.train_set, self.val_set, self.test_set = random_split(
-            self.image_dataset, [train_size, val_size, test_size]
-            )
 
     def train_dataloader(self):
         return DataLoader(
@@ -92,14 +68,14 @@ class PictureDataModule(LightningDataModule):
             shuffle=False,
         )
 
-    def test_dataloader(self):
-        return DataLoader(
-            dataset=self.test_set,
-            batch_size=self.hparams.batch_size,
-            num_workers=self.hparams.num_workers,
-            pin_memory=self.hparams.pin_memory,
-            shuffle=False,
-        )
+    # def test_dataloader(self):
+    #     return DataLoader(
+    #         dataset=self.test_set,
+    #         batch_size=self.hparams.batch_size,
+    #         num_workers=self.hparams.num_workers,
+    #         pin_memory=self.hparams.pin_memory,
+    #         shuffle=False,
+    #     )
 
     def teardown(self, stage: Optional[str] = None):
         """Clean up after fit or test."""

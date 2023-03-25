@@ -7,9 +7,15 @@ model:
 data:
   class_path: src.data.picture_datamodule.PictureDataModule
   init_args:
-    dataset: src.data.components.picture_data.PictureDataset
-    data_dir: /workspace/data/
-    batch_size: 1
+    train_dataset: 
+      class_path: src.data.components.picture_data.PictureDataset
+      init_args:
+        mode: "train"
+    val_dataset:
+      class_path: src.data.components.picture_data.PictureDataset
+      init_args:
+        mode: "validation"
+    batch_size: 2
 trainer:
   logger:
     class_path: pytorch_lightning.loggers.MLFlowLogger
