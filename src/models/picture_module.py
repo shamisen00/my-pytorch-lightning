@@ -1,7 +1,7 @@
 from typing import Any
 
 import torch
-from pytorch_lightning import LightningModule
+from lightning import LightningModule
 from torchmetrics import MeanMetric
 
 

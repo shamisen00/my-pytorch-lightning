@@ -10,7 +10,7 @@ python = "3.9.0"
 # --------- pytorch --------- #
 torch = {url = "https://download.pytorch.org/whl/cu117/torch-2.0.0%2Bcu117-cp39-cp39-linux_x86_64.whl"}
 torchvision = "^0.15.0"
-pytorch-lightning = {extras = ["extra"], version = "^2.0"}
+lightning = {extras = ["extra"], version = "^2.0"}
 torchmetrics = "^0.11.0"
 
 # --------- hydra --------- #

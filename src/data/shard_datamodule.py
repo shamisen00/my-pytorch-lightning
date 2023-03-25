@@ -1,5 +1,5 @@
 from typing import Optional
-import pytorch_lightning as pl
+from lightning import LightningDataModule
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
 import webdataset as wds
@@ -7,7 +7,7 @@ import webdataset as wds
 from src.utils.utils import create_wds
 
 
-class ImageGenerationDataModule(pl.LightningDataModule):
+class ImageGenerationDataModule(LightningDataModule):
     """Example of LightningDataModule for MNIST dataset.
 
     A DataModule implements 5 key methods:
