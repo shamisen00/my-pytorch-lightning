@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 import pytorch_lightning as pl
 import torchvision
 from torchvision import transforms
+import torch
 
 
 class SaveImages(pl.callbacks.Callback):
@@ -15,6 +16,7 @@ class SaveImages(pl.callbacks.Callback):
         norm_range: Optional[Tuple[int, int]] = None,
         scale_each: bool = False,
         pad_value: int = 0,
+        log_interval: int = 3,
     ) -> None:
         """
         Args:
@@ -40,6 +42,7 @@ class SaveImages(pl.callbacks.Callback):
         self.norm_range = norm_range
         self.scale_each = scale_each
         self.pad_value = pad_value
+        self.log_interval = log_interval
 
     def _to_grid(self, images):
         return torchvision.utils.make_grid(
@@ -53,12 +56,21 @@ class SaveImages(pl.callbacks.Callback):
         )
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
-        images = self._to_grid(outputs["targets"])
+        # log every n batches
+        if (batch_idx + 1) % self.log_interval == 0:
+            #predictions = (outputs["y_hat"] - torch.min(outputs["y_hat"])) / (torch.max(outputs["y_hat"]) - torch.min(outputs["y_hat"]))
 
-        to_pil = transforms.ToPILImage()
+            input_grid = self._to_grid(batch[0][0])
+            prediction_grid = self._to_grid(outputs["y_hat"][0])
+            target_grid = self._to_grid(outputs["targets"][0])
 
-        trainer.logger.experiment.log_image(
-            trainer.logger.run_id,
-            image=to_pil(images),
-            artifact_file=f"image{trainer.current_epoch}.jpg"
-            )
+            to_pil = transforms.ToPILImage()
+
+            # Arrange images vertically
+            combined_grid = torch.cat((input_grid, prediction_grid, target_grid), dim=-1)
+
+            trainer.logger.experiment.log_image(
+                trainer.logger.run_id,
+                image=to_pil(combined_grid),
+                artifact_file=f"image{trainer.current_epoch}_{batch_idx}.jpg"
+                )

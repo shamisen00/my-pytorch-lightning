@@ -53,10 +53,10 @@ class PictureModule(LightningModule):
         x, y = batch
         y_hat = self.forward(x)
         loss = self.criterion(y_hat, y)
-        return loss, y
+        return loss, y, y_hat
 
     def training_step(self, batch: Any, batch_idx: int):
-        loss, targets = self.model_step(batch)
+        loss, targets, y_hat = self.model_step(batch)
 
         # update and log metrics
         self.train_loss(loss)
@@ -68,13 +68,13 @@ class PictureModule(LightningModule):
         return {"loss": loss, "targets": targets}
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss, targets = self.model_step(batch)
+        loss, targets, y_hat = self.model_step(batch)
 
         # update and log metrics
         self.val_loss(loss)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
 
-        return {"loss": loss, "targets": targets}
+        return {"loss": loss, "targets": targets, "y_hat": y_hat}
 
     def test_step(self, batch: Any, batch_idx: int):
         loss, targets = self.model_step(batch)
