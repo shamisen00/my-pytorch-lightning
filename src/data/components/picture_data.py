@@ -21,7 +21,9 @@ class PictureDataset(Dataset):
                  data_dir: str = "/workspace/data",
                  default_transform: List = [
                                             transforms.ToTensor(),
-                                            transforms.Resize((224, 224), antialias=True)],
+                                            transforms.Resize((224, 224), antialias=True),
+                                            transforms.RandomHorizontalFlip(p=0.3),
+                                            transforms.Normalize((0.1307,), (0.3081,))],
                  train_transform: Optional[List] = None,
                  ) -> None:
         assert mode in {"train", 'validation'}

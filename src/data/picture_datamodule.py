@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
@@ -39,6 +39,8 @@ class PictureDataModule(LightningDataModule):
         batch_size: int = 8,
         num_workers: int = 2,
         pin_memory: bool = False,
+        transform: Optional[List] = None,
+
     ):
         super().__init__()
 
@@ -56,7 +58,7 @@ class PictureDataModule(LightningDataModule):
             batch_size=self.hparams.batch_size,
             num_workers=self.hparams.num_workers,
             pin_memory=self.hparams.pin_memory,
-            shuffle=True,
+            shuffle=False,
         )
 
     def val_dataloader(self):

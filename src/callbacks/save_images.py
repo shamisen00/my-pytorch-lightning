@@ -1,12 +1,12 @@
 from typing import Optional, Tuple
 
-import lightning as L
+from lightning.pytorch.callbacks import Callback
 import torchvision
 from torchvision import transforms
 import torch
 
 
-class SaveImages(L.callbacks.Callback):
+class SaveImages(Callback):
     def __init__(
         self,
         num_samples: int = 16,
