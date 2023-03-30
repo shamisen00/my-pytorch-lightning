@@ -22,17 +22,19 @@ class PictureModule(LightningModule):
 
     def __init__(
         self,
-        net: torch.nn.Module,
+        net,   # パラメータを保存するようににしていると、特定のクラスを渡せない（nn.sequnetial、transformなど）
         scheduler,
-        lr: float = 1e-1,
+        lr: float = 1,
     ):
         super().__init__()
 
         # this line allows to access init params with 'self.hparams' attribute
         # also ensures init params will be stored in ckpt
-        self.save_hyperparameters(logger=False)
+        self.save_hyperparameters(logger=False, ignore=['net'])
 
         self.net = net
+        # self.net = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
+        #                           in_channels=3, out_channels=3, init_features=32)
 
         # loss function
         self.criterion = torch.nn.MSELoss()

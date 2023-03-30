@@ -1,0 +1,30 @@
+model:
+  class_path: src.models.mnist_module.MNISTLitModule
+  init_args:
+    net: src.models.components.simple_dense_net.SimpleDenseNet
+    # scheduler: torch.optim.lr_scheduler.StepLR
+    # optimizer: torch.optim.Adam  dependencyのため、事前にインスタンス化できない
+data:
+  class_path: src.data.mnist_datamodule.MNISTDataModule
+  init_args:
+    data_dir: /workspace/data/
+    num_workers: 20
+    batch_size: 128
+trainer:
+  logger:
+    class_path: lightning.pytorch.loggers.MLFlowLogger
+    init_args:
+      save_dir: ./logs/mlflow/mlruns
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.EarlyStopping
+      init_args:
+        patience: 5
+        monitor: "val/loss"
+    - class_path: lightning.pytorch.callbacks.LearningRateMonitor
+    - class_path: lightning.pytorch.callbacks.DeviceStatsMonitor
+#  profiler: lightning.pytorch.profilers.PyTorchProfiler
+    # class_path: lightning.pytorch.profilers.PyTorchProfiler
+    # init_args:
+    #   emit_nvtx: True
+  accelerator: gpu
+  devices: 1
