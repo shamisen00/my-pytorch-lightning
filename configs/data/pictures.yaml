@@ -1,12 +1,15 @@
 _target_: src.data.picture_datamodule.PictureDataModule
 
-dataset:
+train_dataset:
   _target_: src.data.components.picture_data.PictureDataset
+  mode: "train"
   data_dir: "/workspace/data"
 
-data_dir: ${paths.data_dir}
+val_dataset:
+  _target_: src.data.components.picture_data.PictureDataset
+  mode: "validation"
+  data_dir: "/workspace/data"
+
 batch_size: 8
-val_split: 0.1
-test_split: 0.1
-num_workers: 1
+num_workers: 2
 pin_memory: False

@@ -12,6 +12,7 @@ scheduler:
   mode: min
   factor: 0.1
   patience: 10
+  step: 3
 
 net:
   _target_: src.models.components.picture_net.PictureNet
