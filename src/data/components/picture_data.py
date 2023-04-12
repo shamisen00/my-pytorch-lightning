@@ -23,15 +23,15 @@ class PictureDataset(Dataset):
                  mode: str,
                  lab: bool = True,
                  data_dir: str = "/workspace/data",
-                 default_transforms: List = [
-                                            transforms.ToTensor(),
-                                            transforms.Resize((224, 224), antialias=True),
-                                            # transforms.RandomHorizontalFlip(p=0.5)
-                                            ],
-                 val_transforms: List = [
-                                            transforms.ToTensor(),
-                                            transforms.Resize((224, 224), antialias=True)
-                                            ],
+                #  default_transforms: List = [
+                #                             transforms.ToTensor(),
+                #                             transforms.Resize((224, 224), antialias=True),
+                #                             # transforms.RandomHorizontalFlip(p=0.5)
+                #                             ],
+                #  val_transforms: List = [
+                #                             transforms.ToTensor(),
+                #                             transforms.Resize((224, 224), antialias=True)
+                #                             ],
                  ) -> None:
         assert mode in {"train", 'validation'}
 
@@ -39,8 +39,14 @@ class PictureDataset(Dataset):
 
         self.mode = mode
         self.lab = lab
-        self.default_transform = default_transforms
-        self.val_transform = val_transforms
+        self.default_transform = [transforms.ToTensor(),
+                                            transforms.Resize((224, 224), antialias=True),
+                                            # transforms.RandomHorizontalFlip(p=0.5)
+                                            ]
+        self.val_transform = [
+                                            transforms.ToTensor(),
+                                            transforms.Resize((224, 224), antialias=True)
+                                            ]
 
         self.input_dir = self.data_dir / self.mode / "input"
         self.gt_dir = self.data_dir / self.mode / "gt"

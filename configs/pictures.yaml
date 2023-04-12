@@ -1,16 +1,24 @@
-model:
-  class_path: src.models.picture_module.PictureModule
+optimizer:
+  class_path: torch.optim.Adam
   init_args:
-    lr: 1e-3
-    step_size: 8
-    net:
-      class_path: src.models.components.picture_net.PictureNet
-      # init_args:
-      #   backbone: src.models.components.backbone.AlexNet
-      #     init_args:
-      #       out_sch: 16      # recursiveにインスタンス化できない
-    scheduler: torch.optim.lr_scheduler.StepLR
-    # optimizer: torch.optim.Adam
+    lr: 0.001
+lr_scheduler:
+  class_path: torch.optim.lr_scheduler.StepLR
+  init_args:
+    step_size: 6
+model:
+  net:
+    class_path: src.models.components.picture_net.PictureNet
+    init_args:
+      feature_size: 16
+      hidden_ch:
+        - 120
+        - 60
+        - 12
+      # backbone:
+      #   class_path: src.models.components.backbone.AlexNet
+      #   init_args:
+      #     out_sch: 16
 data:
   class_path: src.data.picture_datamodule.PictureDataModule
   init_args:   # transformはrecursiveになるのでここには書かない。dataloaderを読み込む手前でデータセットの作成&データ拡張やるのがいいと思うが重い
@@ -47,6 +55,6 @@ trainer:
   #   class_path: lightning.pytorch.profilers.PyTorchProfiler  何故かエラーが出る
   #   init_args:
   #     emit_nvtx: True
-  max_epochs: 15
+  max_epochs: 20
   accelerator: gpu
   devices: 1

@@ -24,9 +24,6 @@ class PictureModule(LightningModule):
     def __init__(
         self,
         net,   # パラメータを保存するようににしていると、特定のクラスを渡せない（nn.sequnetial、transformなど）
-        scheduler,
-        lr: float,
-        step_size: int,
     ):
         super().__init__()
 
@@ -93,14 +90,16 @@ class PictureModule(LightningModule):
 
         return {"loss": loss, "targets": targets}
 
-    def configure_optimizers(self):
-        """Choose what optimizers and learning-rate schedulers to use in your optimization.
-        Normally you'd need one. But in the case of GANs or similar you might have multiple.
+    # def configure_optimizers(self):
+    #     """Choose what optimizers and learning-rate schedulers to use in your optimization.
+    #     Normally you'd need one. But in the case of GANs or similar you might have multiple.
 
-        Examples:
-            https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
-        """
-        optimizer = torch.optim.Adam(params=self.parameters(), lr=self.hparams.lr)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=self.hparams.step_size)
+    #     Examples:
+    #         https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
+    #     """
+    #     optimizer = torch.optim.Adam(params=self.parameters(), lr=self.hparams.lr)
+    #     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=self.hparams.step_size)
+    #     optimizer = self.hparams.optimizer(self.parameters())
+    #     scheduler = self.hparams.scheduler(self.parameters())
 
-        return ([optimizer], [scheduler])
+    #     return ([optimizer], [scheduler])
