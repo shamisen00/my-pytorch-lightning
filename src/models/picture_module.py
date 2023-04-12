@@ -3,6 +3,7 @@ from typing import Any
 import torch
 from lightning import LightningModule
 from torchmetrics import MeanMetric
+from torchvision.models import densenet121
 
 
 class PictureModule(LightningModule):
@@ -24,7 +25,8 @@ class PictureModule(LightningModule):
         self,
         net,   # パラメータを保存するようににしていると、特定のクラスを渡せない（nn.sequnetial、transformなど）
         scheduler,
-        lr: float = 1,
+        lr: float,
+        step_size: int,
     ):
         super().__init__()
 
@@ -35,6 +37,7 @@ class PictureModule(LightningModule):
         self.net = net
         # self.net = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
         #                           in_channels=3, out_channels=3, init_features=32)
+        #self.net = densenet121(num_classes = 3)
 
         # loss function
         self.criterion = torch.nn.MSELoss()
@@ -55,6 +58,8 @@ class PictureModule(LightningModule):
         x, y = batch
         y_hat = self.forward(x)
         loss = self.criterion(y_hat, y)
+        #print("x", x[0,1,:,:], "x\n,y", y, "y\n", y_hat, "y_hat\n")
+        #print("x", x[0,1,:,:])
         return loss, y, y_hat
 
     def training_step(self, batch: Any, batch_idx: int):
@@ -76,6 +81,8 @@ class PictureModule(LightningModule):
         self.val_loss(loss)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
 
+        #print("input_validation", batch[0][0])
+
         return {"loss": loss, "targets": targets, "y_hat": y_hat}
 
     def test_step(self, batch: Any, batch_idx: int):
@@ -94,6 +101,6 @@ class PictureModule(LightningModule):
             https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#configure-optimizers
         """
         optimizer = torch.optim.Adam(params=self.parameters(), lr=self.hparams.lr)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=self.hparams.step_size)
 
         return ([optimizer], [scheduler])

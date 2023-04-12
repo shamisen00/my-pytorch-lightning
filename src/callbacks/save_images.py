@@ -5,10 +5,13 @@ import torchvision
 from torchvision import transforms
 import torch
 
+from src.utils.utils import lab2rgb_torch, de_normalize
+
 
 class SaveImages(Callback):
     def __init__(
         self,
+        lab: bool = True,
         num_samples: int = 16,
         nrow: int = 8,
         padding: int = 2,
@@ -43,6 +46,7 @@ class SaveImages(Callback):
         self.scale_each = scale_each
         self.pad_value = pad_value
         self.log_interval = log_interval
+        self.lab = lab
 
     def _to_grid(self, images):
         return torchvision.utils.make_grid(
@@ -60,17 +64,34 @@ class SaveImages(Callback):
         if (batch_idx + 1) % self.log_interval == 0:
             #predictions = (outputs["y_hat"] - torch.min(outputs["y_hat"])) / (torch.max(outputs["y_hat"]) - torch.min(outputs["y_hat"]))
 
-            input_grid = self._to_grid(batch[0][0])
-            prediction_grid = self._to_grid(outputs["y_hat"][0])
-            target_grid = self._to_grid(outputs["targets"][0])
+            # input_grid = self._to_grid(batch[0][0])
+            # prediction_grid = self._to_grid(outputs["y_hat"][0])
+            # target_grid = self._to_grid(outputs["targets"][0])
+
+            # print("input", input_grid[1, :, :])
 
             to_pil = transforms.ToPILImage()
 
-            # Arrange images vertically
-            combined_grid = torch.cat((input_grid, prediction_grid, target_grid), dim=-1)
+            input_grid = batch[0][0]
+            prediction_grid = outputs["y_hat"][0]
+            target_grid = outputs["targets"][0]
+
+            # # Arrange images vertically
+            combined_grid = torch.cat((input_grid, prediction_grid, target_grid), dim=-1).cpu()
+            # combined_grid = outputs["targets"][0]
+            if self.lab:
+                # NNが勝手に規格化しているので戻す
+                combined_grid = de_normalize(combined_grid)
+                combined_grid = lab2rgb_torch(combined_grid.cpu())
+
+                # combined_grid = de_normalize(combined_grid)
+                combined_grid = self._to_grid(combined_grid)
+                combined_grid = to_pil(combined_grid)
+            else:
+                combined_grid = to_pil(combined_grid)
 
             trainer.logger.experiment.log_image(
                 trainer.logger.run_id,
-                image=to_pil(combined_grid),
+                image=combined_grid,
                 artifact_file=f"image{trainer.current_epoch}_{batch_idx}.jpg"
                 )

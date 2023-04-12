@@ -4,6 +4,8 @@ from lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 
 
+from src.data.components.picture_data import PictureDataset
+
 class PictureDataModule(LightningDataModule):
     """Example of LightningDataModule for MNIST dataset.
 
@@ -34,10 +36,10 @@ class PictureDataModule(LightningDataModule):
 
     def __init__(
         self,
-        train_dataset: Optional[Dataset] = None,
-        val_dataset: Optional[Dataset] = None,
-        batch_size: int = 8,
-        num_workers: int = 2,
+        train_dataset: Optional[Dataset] = PictureDataset(mode="train", lab=True),
+        val_dataset: Optional[Dataset] = PictureDataset('validation', lab=True),
+        batch_size: int = 16,
+        num_workers: int = 18,
         pin_memory: bool = False,
         transform: Optional[List] = None,
 

@@ -1,5 +1,6 @@
 from torch import nn, Tensor
-from torchvision.models import alexnet
+from torchvision.models import alexnet, densenet121
+import torch
 
 
 class AlexNet(nn.Module):
@@ -29,5 +30,18 @@ class AlexNet(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         x: Tensor = self.backbone(x)
+
+        return x
+
+class Identity(nn.Module):
+    def __init__(
+        self,
+        out_ch: int
+    ) -> None:
+        super().__init__()
+        self.out_ch = out_ch
+
+    def forward(self, x: Tensor) -> Tensor:
+        x: Tensor = torch.zeros([x.size(0), self.out_ch], device=torch.device('cuda'))
 
         return x

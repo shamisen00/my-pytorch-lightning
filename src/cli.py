@@ -1,9 +1,11 @@
 from lightning.pytorch.cli import LightningCLI
+from src.models.picture_module import PictureModule
 
 
 def main():
     # To enable variable interpolation, first install omegaconf:
     LightningCLI(
+        model_class=PictureModule,
         save_config_callback=None,
         parser_kwargs={
             "parser_mode": "omegaconf",

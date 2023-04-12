@@ -5,12 +5,16 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List
 import random
 
+from skimage.color import lab2rgb, rgb2lab
+from PIL import Image
 from tqdm.auto import tqdm
 import hydra
 from omegaconf import DictConfig
 from pytorch_lightning import Callback
 from pytorch_lightning.loggers import Logger
 from pytorch_lightning.utilities import rank_zero_only
+import torch
+import torchvision.transforms as transforms
 # import webdataset as wds
 
 from src.utils import pylogger, rich_utils
@@ -254,3 +258,53 @@ def create_wds(cfg: DictConfig) -> None:
                 })
     else:
         pass
+
+
+def rgb2lab_torch(rgb_tensor: torch.Tensor) -> torch.Tensor:
+    to_tensor = transforms.ToTensor()
+    rgb_tensor = torch.permute(rgb_tensor, (1, 2, 0))
+    lab = rgb2lab(rgb_tensor)
+    lab_tensor = to_tensor(lab)
+
+    return lab_tensor
+
+
+def lab2rgb_torch(lab_tensor: torch.Tensor) -> Image:
+    to_tensor = transforms.ToTensor()
+    # to_pil = transforms.ToPILImage()
+
+    # print("\n input of output a", "\n", lab_tensor[1, :, :].min())
+    # print("\n input of output a", "\n", lab_tensor[1:, :, :].max())
+
+    # print("\n input of output b", "\n", lab_tensor[2, :, :].min())
+    # print("\n input of output b", "\n", lab_tensor[2:, :, :].max())
+
+    # print("\n input of output renomal", "\n", lab_tensor[2, :, :].min(), "\n")
+    # print("\n input of output renomal", "\n", lab_tensor[2:, :, :].max(), "\n")
+    lab_tensor = torch.permute(lab_tensor, (1, 2, 0))
+    lab = lab2rgb(lab_tensor)
+    rgb_tensor = to_tensor(lab)
+    # print("\n output","\n",rgb_tensor[2, :, :].min())
+    # print("\n output","\n",rgb_tensor[2, :, :].max())
+
+    return rgb_tensor
+
+
+def normalize(im):
+    im[0, :, :] = im[0, :, :] / 100
+
+    min_input, max_input = -90, 100
+    min_output, max_output = 0, 1
+
+    im[1:, :, :] = (im[1:, :, :] - min_input) * (max_output - min_output) / (max_input - min_input) + min_output
+    return im
+
+
+def de_normalize(im):
+    im[0, :, :] = im[0, :, :] * 100
+
+    min_input, max_input = 0, 1
+    min_output, max_output = -90, 100
+
+    im[1:, :, :] = (im[1:, :, :] - min_input) * (max_output - min_output) / (max_input - min_input) + min_output
+    return im

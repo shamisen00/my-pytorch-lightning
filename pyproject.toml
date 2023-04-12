@@ -29,6 +29,7 @@ pyrootutils = "^1.0.4"    # standardizing the project root setup
 rich ="^13.0"   # beautiful text formatting in terminal
 llvmlite = "0.31.0" # https://zenn.dev/iimuz/articles/ccdcf54829058cedf3d3 (for numba)
 # webdataset     If you want to serialize data
+scikit-image = "^0.20.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
