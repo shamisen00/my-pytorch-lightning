@@ -6,6 +6,7 @@ def main():
     # To enable variable interpolation, first install omegaconf:
     LightningCLI(
         model_class=PictureModule,
+        save_config_kwargs={"overwrite": True},
         parser_kwargs={
             "parser_mode": "omegaconf",
             "fit": {"default_config_files": ["configs/pictures.yaml"]}
