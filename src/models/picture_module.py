@@ -1,9 +1,12 @@
-from typing import Any
+from typing import Any, Dict, List
 
 import torch
+from torch import nn, Tensor
 from lightning import LightningModule
 from torchmetrics import MeanMetric
 from torchvision.models import densenet121
+
+# from src.models.components.backbone import AlexNet, Identity
 
 
 class PictureModule(LightningModule):
@@ -23,7 +26,9 @@ class PictureModule(LightningModule):
 
     def __init__(
         self,
-        net,   # パラメータを保存するようににしていると、特定のクラスを渡せない（nn.sequnetial、transformなど）
+        backbone,
+        feature_size: int = 16,
+        hidden_ch: List[int] = [8, 4]   # パラメータを保存するようににしていると、特定のクラスを渡せない（nn.sequnetial、transformなど）
     ):
         super().__init__()
 
@@ -31,10 +36,26 @@ class PictureModule(LightningModule):
         # also ensures init params will be stored in ckpt
         self.save_hyperparameters(logger=False, ignore=['net'])
 
-        self.net = net
+        # self.net = net
         # self.net = torch.hub.load('mateuszbuda/brain-segmentation-pytorch', 'unet',
         #                           in_channels=3, out_channels=3, init_features=32)
-        #self.net = densenet121(num_classes = 3)
+        # self.net = densenet121(num_classes = 3)
+
+        self.backbone = backbone
+        # decoder
+        self.layers = []
+
+        feature_size = self.hparams.feature_size
+        image_ch = 3
+        for ch in self.hparams.hidden_ch:
+            out_ch = ch
+            self.layers.append(Block(feature_size=feature_size, image_ch=image_ch, out_ch=ch))
+            feature_size = out_ch
+            image_ch = out_ch
+
+        self.blocks = nn.Sequential(*self.layers)
+
+        self.conv_final = nn.Conv2d(in_channels=out_ch, out_channels=3, kernel_size=1)
 
         # loss function
         self.criterion = torch.nn.MSELoss()
@@ -44,7 +65,21 @@ class PictureModule(LightningModule):
         self.test_loss = MeanMetric()
 
     def forward(self, x: torch.Tensor):
-        return self.net(x)
+        f: Tensor = self.backbone(x)
+        images: Tensor = x
+        images = x
+
+        d = {"x": x, "f": f}
+
+        d = self.blocks(d)
+
+        x = self.conv_final(d["x"])
+
+        x = x + images
+        # print("x", x[0, 1, :, :])
+        # x = torch.clamp(x, 0, 1)  # (B, C, H, W)
+
+        return x
 
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
@@ -103,3 +138,28 @@ class PictureModule(LightningModule):
     #     scheduler = self.hparams.scheduler(self.parameters())
 
     #     return ([optimizer], [scheduler])
+
+
+class Block(nn.Module):
+    def __init__(
+        self,
+        feature_size: int,
+        image_ch: int,
+        out_ch: int
+    ) -> None:
+        super().__init__()
+
+        self.conv = nn.Conv2d(image_ch, out_ch, kernel_size=1)
+        self.linear = nn.Linear(feature_size, out_ch)
+        self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, d) -> Dict:
+        f = d["f"].view(d["f"].size(0), -1)
+        f = self.linear(f).view(f.size(0), -1, 1, 1)
+        x = self.conv(d["x"]) + f
+        x = self.relu(x)
+
+        d["x"] = x
+        d["f"] = f
+
+        return d

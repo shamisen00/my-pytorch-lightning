@@ -7,15 +7,15 @@ lr_scheduler:
   init_args:
     step_size: 6
 model:
-  net:
-    class_path: src.models.components.picture_net.PictureNet
+  backbone:
+    class_path: src.models.components.backbone.AlexNet
     init_args:
-      feature_size: 16
-      hidden_ch:
-        - 120
-        - 60
-        - 60
-        - 12
+      out_ch: ${model.feature_size}
+  feature_size: 16
+  hidden_ch:
+    - 8
+    - 4
+    - 3
       # backbone:
       #   class_path: src.models.components.backbone.AlexNet
       #   init_args:
