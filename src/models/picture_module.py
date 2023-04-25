@@ -3,7 +3,8 @@ from typing import Any, Dict, List
 import torch
 from torch import nn, Tensor
 from lightning import LightningModule
-from torchmetrics import MeanMetric
+from torchmetrics import MeanMetric, StructuralSimilarityIndexMeasure
+from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
 from torchvision.models import densenet121
 
 # from src.models.components.backbone import AlexNet, Identity
@@ -62,6 +63,7 @@ class PictureModule(LightningModule):
 
         self.train_loss = MeanMetric()
         self.val_loss = MeanMetric()
+        self.ssim = StructuralSimilarityIndexMeasure()
         self.test_loss = MeanMetric()
 
     def forward(self, x: torch.Tensor):
@@ -90,9 +92,14 @@ class PictureModule(LightningModule):
         x, y = batch
         y_hat = self.forward(x)
         loss = self.criterion(y_hat, y)
-        #print("x", x[0,1,:,:], "x\n,y", y, "y\n", y_hat, "y_hat\n")
-        #print("x", x[0,1,:,:])
         return loss, y, y_hat
+
+    def val_model_step(self, batch: Any):
+        x, y = batch
+        y_hat = self.forward(x)
+        loss = self.criterion(y_hat, y)
+        ssim = self.ssim(y_hat, y)
+        return ssim, loss, y, y_hat
 
     def training_step(self, batch: Any, batch_idx: int):
         loss, targets, y_hat = self.model_step(batch)
@@ -107,11 +114,13 @@ class PictureModule(LightningModule):
         return {"loss": loss, "targets": targets}
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss, targets, y_hat = self.model_step(batch)
+        ssim, loss, targets, y_hat = self.val_model_step(batch)
 
         # update and log metrics
         self.val_loss(loss)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
+
+        self.log("val/ssim", self.ssim, on_step=False, on_epoch=True, prog_bar=True)
 
         #print("input_validation", batch[0][0])
 
