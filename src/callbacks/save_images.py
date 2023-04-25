@@ -15,11 +15,11 @@ class SaveImages(Callback):
         num_samples: int = 16,
         nrow: int = 8,
         padding: int = 2,
-        normalize: bool = True,
+        normalize: bool = False,
         norm_range: Optional[Tuple[int, int]] = None,
         scale_each: bool = False,
         pad_value: int = 0,
-        log_interval: int = 3,
+        log_interval: int = 1,
     ) -> None:
         """
         Args:
@@ -59,7 +59,14 @@ class SaveImages(Callback):
             pad_value=self.pad_value,
         )
 
-    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
+    def _to_rgb(self, image):
+        image = de_normalize(image)
+        image = lab2rgb_torch(image.cpu())
+        image = self._to_grid(image)
+
+        return image
+
+    def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         # log every n batches
         if (batch_idx + 1) % self.log_interval == 0:
             #predictions = (outputs["y_hat"] - torch.min(outputs["y_hat"])) / (torch.max(outputs["y_hat"]) - torch.min(outputs["y_hat"]))
@@ -70,25 +77,26 @@ class SaveImages(Callback):
 
             # print("input", input_grid[1, :, :])
 
-            to_pil = transforms.ToPILImage()
-
             input_grid = batch[0][0]
             prediction_grid = outputs["y_hat"][0]
             target_grid = outputs["targets"][0]
 
             # # Arrange images vertically
-            combined_grid = torch.cat((input_grid, prediction_grid, target_grid), dim=-1).cpu()
-            # combined_grid = outputs["targets"][0]
-            if self.lab:
-                # NNが勝手に規格化しているので戻す
-                combined_grid = de_normalize(combined_grid)
-                combined_grid = lab2rgb_torch(combined_grid.cpu())
 
-                # combined_grid = de_normalize(combined_grid)
-                combined_grid = self._to_grid(combined_grid)
-                combined_grid = to_pil(combined_grid)
-            else:
-                combined_grid = to_pil(combined_grid)
+            # combined_grid = outputs["targets"][0]
+
+            if self.lab:
+                input_grid = self._to_rgb(input_grid)
+                prediction_grid = self._to_rgb(prediction_grid)
+                target_grid = self._to_rgb(target_grid)
+
+            pl_module.ssim(torch.unsqueeze(prediction_grid, dim=0), torch.unsqueeze(target_grid, dim=0))
+            pl_module.log("val/ssim", pl_module.ssim, on_step=False, on_epoch=True, prog_bar=True)
+
+            combined_grid = torch.cat((input_grid, prediction_grid, target_grid), dim=-1).cpu()
+
+            to_pil = transforms.ToPILImage()
+            combined_grid = to_pil(combined_grid)
 
             trainer.logger.experiment.log_image(
                 trainer.logger.run_id,
