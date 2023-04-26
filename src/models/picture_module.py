@@ -7,6 +7,8 @@ from torchmetrics import MeanMetric, StructuralSimilarityIndexMeasure
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
 from torchvision.models import densenet121
 
+from src.utils.utils import to_rgb
+
 # from src.models.components.backbone import AlexNet, Identity
 
 
@@ -119,9 +121,13 @@ class PictureModule(LightningModule):
         self.val_loss(loss)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
 
-        #self.log("val/ssim", self.ssim, on_step=False, on_epoch=True, prog_bar=True)
+        for i in range(len(batch[0])):
+            if True:
+                targets[i] = to_rgb(targets[i])
+                y_hat[i] = to_rgb(y_hat[i])
 
-        #print("input_validation", batch[0][0])
+        self.ssim(targets, y_hat)
+        self.log("val/ssim", self.ssim, on_step=False, on_epoch=True, prog_bar=True)
 
         return {"loss": loss, "targets": targets, "y_hat": y_hat}
 

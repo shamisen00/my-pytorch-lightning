@@ -67,33 +67,20 @@ class SaveImages(Callback):
         return image
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
+        # for i in range(batch[0]):
+        #     if i % self.log_interval == 0:
         # log every n batches
-        if (batch_idx + 1) % self.log_interval == 0:
-            #predictions = (outputs["y_hat"] - torch.min(outputs["y_hat"])) / (torch.max(outputs["y_hat"]) - torch.min(outputs["y_hat"]))
-
-            # input_grid = self._to_grid(batch[0][0])
-            # prediction_grid = self._to_grid(outputs["y_hat"][0])
-            # target_grid = self._to_grid(outputs["targets"][0])
-
-            # print("input", input_grid[1, :, :])
-
-            input_grid = batch[0][0]
-            prediction_grid = outputs["y_hat"][0]
-            target_grid = outputs["targets"][0]
+        for i in range(len(batch[0])):  # nはループの上限値です。必要に応じて変更してください。
+            input_grid = batch[0][i]
+            prediction_grid = outputs["y_hat"][i]
+            target_grid = outputs["targets"][i]
 
             # # Arrange images vertically
 
-            # combined_grid = outputs["targets"][0]
-
-            if self.lab:
+            if True:
                 input_grid = self._to_rgb(input_grid)
-                prediction_grid = self._to_rgb(prediction_grid)
-                target_grid = self._to_rgb(target_grid)
 
-            pl_module.ssim(torch.unsqueeze(prediction_grid, dim=0), torch.unsqueeze(target_grid, dim=0))
-            pl_module.log("val/ssim", pl_module.ssim, on_step=False, on_epoch=True, prog_bar=True)
-
-            combined_grid = torch.cat((input_grid, prediction_grid, target_grid), dim=-1).cpu()
+            combined_grid = torch.cat((input_grid.cpu(), prediction_grid.cpu(), target_grid.cpu()), dim=-1)
 
             to_pil = transforms.ToPILImage()
             combined_grid = to_pil(combined_grid)

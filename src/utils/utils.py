@@ -15,6 +15,7 @@ from pytorch_lightning.loggers import Logger
 from pytorch_lightning.utilities import rank_zero_only
 import torch
 import torchvision.transforms as transforms
+import torchvision
 # import webdataset as wds
 
 from src.utils import pylogger, rich_utils
@@ -308,3 +309,15 @@ def de_normalize(im):
 
     im[1:, :, :] = (im[1:, :, :] - min_input) * (max_output - min_output) / (max_input - min_input) + min_output
     return im
+
+
+def _to_grid(images):
+    return torchvision.utils.make_grid(tensor=images)
+
+
+def to_rgb(image):
+    image = de_normalize(image)
+    image = lab2rgb_torch(image.cpu())
+    image = _to_grid(image)
+
+    return image
