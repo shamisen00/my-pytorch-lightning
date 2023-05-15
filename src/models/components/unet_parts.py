@@ -44,7 +44,7 @@ class Down(nn.Module):
 
     def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.res_conv = DoubleConv(in_channels, out_channels)
+        self.double_conv = DoubleConv(in_channels, out_channels)
         self.down_conv = DownConv(out_channels)
 
         self.relu = nn.ReLU(inplace=True)
@@ -52,7 +52,7 @@ class Down(nn.Module):
     def forward(self, x):
         identity = x
 
-        x = self.res_conv(x)
+        x = self.double_conv(x)
         x = self.down_conv(x)
 
         x += identity
