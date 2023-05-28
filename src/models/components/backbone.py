@@ -1,5 +1,6 @@
 from torch import nn, Tensor
-from torchvision.models import alexnet, densenet121
+from torchvision.models import alexnet, efficientnet_b0, efficientnet_b1, efficientnet_b3, efficientnet_b7
+from torchvision.models import EfficientNet_B0_Weights, EfficientNet_B1_Weights, EfficientNet_B3_Weights, EfficientNet_B7_Weights
 import torch
 
 
@@ -27,6 +28,56 @@ class AlexNet(nn.Module):
 
         # encoder
         self.backbone = nn.Sequential(*self.backbone, self.avg, self.relu)
+
+    def forward(self, x: Tensor) -> Tensor:
+        x: Tensor = self.backbone(x)
+
+        return x
+
+
+class EfficientNetB3(nn.Module):
+    def __init__(self, out_ch, weights: EfficientNet_B3_Weights = EfficientNet_B3_Weights):
+        super().__init__()
+        self.out_ch = out_ch
+        self.weights = weights
+
+        self.backbone: nn.Module = efficientnet_b3(weights=self.weights)
+
+        # 最終畳み込み層のchを変更
+        last_layer = self.backbone.classifier[1]
+        new_last_layer = nn.Linear(
+            last_layer.in_features,
+            out_features=self.out_ch)
+        self.backbone.classifier[1] = new_last_layer
+
+        self.relu = nn.ReLU(inplace=True)
+
+        self.backbone = nn.Sequential(self.backbone, self.relu)
+
+    def forward(self, x: Tensor) -> Tensor:
+        x: Tensor = self.backbone(x)
+
+        return x
+
+
+class EfficientNetB7(nn.Module):
+    def __init__(self, out_ch, weights: EfficientNet_B7_Weights = EfficientNet_B7_Weights):
+        super().__init__()
+        self.out_ch = out_ch
+        self.weights = weights
+
+        self.backbone: nn.Module = efficientnet_b7(weights=self.weights)
+
+        # 最終畳み込み層のchを変更
+        last_layer = self.backbone.classifier[1]
+        new_last_layer = nn.Linear(
+            last_layer.in_features,
+            out_features=self.out_ch)
+        self.backbone.classifier[1] = new_last_layer
+
+        self.relu = nn.ReLU(inplace=True)
+
+        self.backbone = nn.Sequential(self.backbone, self.relu)
 
     def forward(self, x: Tensor) -> Tensor:
         x: Tensor = self.backbone(x)

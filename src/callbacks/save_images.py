@@ -18,8 +18,7 @@ class SaveImages(Callback):
         normalize: bool = False,
         norm_range: Optional[Tuple[int, int]] = None,
         scale_each: bool = False,
-        pad_value: int = 0,
-        log_interval: int = 1,
+        pad_value: int = 0
     ) -> None:
         """
         Args:
@@ -45,7 +44,6 @@ class SaveImages(Callback):
         self.norm_range = norm_range
         self.scale_each = scale_each
         self.pad_value = pad_value
-        self.log_interval = log_interval
         self.lab = lab
 
     def _to_grid(self, images):
@@ -67,26 +65,21 @@ class SaveImages(Callback):
         return image
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
-        # for i in range(batch[0]):
-        #     if i % self.log_interval == 0:
-        # log every n batches
-        for i in range(len(batch[0])):  # nはループの上限値です。必要に応じて変更してください。
-            input_grid = batch[0][i]
-            prediction_grid = outputs["y_hat"][i]
-            target_grid = outputs["targets"][i]
+        for i in range(len(batch[0])):
+            if i % 5 == 0:
+                input_grid = batch[0][i]
+                prediction_grid = outputs["y_hat"][i]
+                target_grid = outputs["targets"][i]
 
-            # # Arrange images vertically
+                # # Arrange images vertically
 
-            if True:
-                input_grid = self._to_rgb(input_grid)
+                combined_grid = torch.cat((input_grid.cpu(), prediction_grid.cpu(), target_grid.cpu()), dim=-1)
 
-            combined_grid = torch.cat((input_grid.cpu(), prediction_grid.cpu(), target_grid.cpu()), dim=-1)
+                to_pil = transforms.ToPILImage()
+                combined_grid = to_pil(combined_grid)
 
-            to_pil = transforms.ToPILImage()
-            combined_grid = to_pil(combined_grid)
-
-            trainer.logger.experiment.log_image(
-                trainer.logger.run_id,
-                image=combined_grid,
-                artifact_file=f"image{trainer.current_epoch}_{batch_idx}.jpg"
-                )
+                trainer.logger.experiment.log_image(
+                    trainer.logger.run_id,
+                    image=combined_grid,
+                    artifact_file=f"image{trainer.current_epoch}_batchidx{batch_idx}_batchNum{i}.jpg"
+                    )

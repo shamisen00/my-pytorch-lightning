@@ -7,9 +7,7 @@ from torchmetrics import MeanMetric, StructuralSimilarityIndexMeasure
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
 from torchvision.models import densenet121
 
-from src.utils.utils import to_rgb
-
-# from src.models.components.backbone import AlexNet, Identity
+from src.models.components.backbone import AlexNet, Identity, EfficientNetB3, EfficientNetB7
 
 
 class PictureModule(LightningModule):
@@ -29,7 +27,6 @@ class PictureModule(LightningModule):
 
     def __init__(
         self,
-        backbone,
         feature_size: int = 16,
         hidden_ch: List[int] = [8, 4]   # パラメータを保存するようににしていると、特定のクラスを渡せない（nn.sequnetial、transformなど）
     ):
@@ -44,7 +41,10 @@ class PictureModule(LightningModule):
         #                           in_channels=3, out_channels=3, init_features=32)
         # self.net = densenet121(num_classes = 3)
 
-        self.backbone = backbone
+        feature_size = self.hparams.feature_size
+
+        self.backbone = EfficientNetB3(out_ch=feature_size)
+        #self.backbone = EfficientNetB3(out_ch=feature_size, weights=None)
         # decoder
         self.layers = []
 
@@ -80,8 +80,8 @@ class PictureModule(LightningModule):
         x = self.conv_final(d["x"])
 
         x = x + images
-        # print("x", x[0, 1, :, :])
-        # x = torch.clamp(x, 0, 1)  # (B, C, H, W)
+
+        x = torch.clamp(x, 0, 1)  # (B, C, H, W)
 
         return x
 
@@ -121,18 +121,13 @@ class PictureModule(LightningModule):
         self.val_loss(loss)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
 
-        for i in range(len(batch[0])):
-            if True:
-                targets[i] = to_rgb(targets[i])
-                y_hat[i] = to_rgb(y_hat[i])
-
         self.ssim(targets, y_hat)
         self.log("val/ssim", self.ssim, on_step=False, on_epoch=True, prog_bar=True)
 
         return {"loss": loss, "targets": targets, "y_hat": y_hat}
 
     def test_step(self, batch: Any, batch_idx: int):
-        loss, targets = self.model_step(batch)
+        loss, targets, y_hat = self.model_step(batch)
 
         self.test_loss(loss)
         self.log("test/loss", self.test_loss, on_step=False, on_epoch=True, prog_bar=True)

@@ -9,17 +9,10 @@ optimizer:
 lr_scheduler:
   class_path: torch.optim.lr_scheduler.CosineAnnealingLR
   init_args:
-    T_max: 18
+    T_max: 25
     eta_min: 1e-8
 model:
-  feature_size: 32
-  hidden_ch:
-    - 256
-    - 128
-      # backbone:
-      #   class_path: src.models.components.backbone.AlexNet
-      #   init_args:
-      #     out_sch: 16
+  class_path: src.models.unet_model.UnetModule
 data:
   class_path: src.data.picture_datamodule.PictureDataModule
   init_args:   # transformはrecursiveになるのでここには書かない。dataloaderを読み込む手前でデータセットの作成&データ拡張やるのがいいと思うが重い
@@ -45,6 +38,6 @@ trainer:
   #   class_path: lightning.pytorch.profilers.PyTorchProfiler  何故かエラーが出る
   #   init_args:
   #     emit_nvtx: True
-  max_epochs: 18
+  max_epochs: 25
   accelerator: gpu
   devices: 1
