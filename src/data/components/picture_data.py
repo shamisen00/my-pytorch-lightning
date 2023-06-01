@@ -35,15 +35,15 @@ class PictureDataset(Dataset):
         self.gt_dir = self.data_dir / self.mode / "GT_IMAGES"
 
         self.input_paths = list(self.input_dir.glob("*"))
-        # self.input_paths = [p for p in input_paths if p.stem.rsplit("_", 1)[1] == "P1.5"]
 
     def __len__(self):
         return len(self.input_paths)
 
     def __getitem__(self, index):
         input_img_path = self.input_paths[index]
-        f_name = Path(input_img_path.stem.rsplit("_", 1)[0])
-        gt_img_path = self.gt_dir / f_name.with_suffix('.jpg')
+        f_name = input_img_path.stem.rsplit("_", 1)[0]
+        suffix = input_img_path.stem.rsplit("_", 1)[1]
+        gt_img_path = self.gt_dir / Path(f_name).with_suffix('.jpg')
 
         train_image = Image.open(input_img_path).convert("RGB")
         gt_image = Image.open(gt_img_path).convert("RGB")
@@ -60,7 +60,7 @@ class PictureDataset(Dataset):
         torch.manual_seed(seed)
         gt_image = image_transforms(gt_image)
 
-        return train_image, gt_image
+        return train_image, gt_image, (f_name, suffix)
 
 
 if __name__ == "__main__":

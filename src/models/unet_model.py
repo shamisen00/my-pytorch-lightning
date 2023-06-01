@@ -5,10 +5,12 @@ import torch
 import torch.nn as nn
 from torch import nn, Tensor
 from lightning import LightningModule
-from torchmetrics import MeanMetric, StructuralSimilarityIndexMeasure
+from torchmetrics import MeanMetric, StructuralSimilarityIndexMeasure, PeakSignalNoiseRatio
 from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
+from torchmetrics import CatMetric
 
 from src.models.components.unet_parts import DoubleConv, Down, Up, OutConv
+from src.utils.utils import get_mask
 
 
 class UnetModule(LightningModule):
@@ -34,15 +36,69 @@ class UnetModule(LightningModule):
         self.net = UNet(bilinear=True)
 
         # loss function
-        self.criterion = torch.nn.MSELoss()
+        self.criterion = torch.nn.L1Loss()
 
         self.train_loss = MeanMetric()
         self.val_loss = MeanMetric()
-        self.ssim = StructuralSimilarityIndexMeasure()
         self.test_loss = MeanMetric()
+
+        self.suffixes = {"N1.5", "N1", "0", "P1", "P1.5"}
+        self.suffixes_featured = {"N1", "0", "P1"}
+
+        self.N15_loss = MeanMetric()
+        self.N1_loss = MeanMetric()
+        self._0_loss = MeanMetric()
+        self.P1_loss = MeanMetric()
+        self.P15_loss = MeanMetric()
+
+        self.sample_losses = CatMetric()
+        self.sample_fnames = []
+        self.sample_suffixes = []
+
+        self.ssim = StructuralSimilarityIndexMeasure()
+        self.psnr = PeakSignalNoiseRatio()
+        # self.lpips = LearnedPerceptualImagePatchSimilarity()
+
+        self.psnr_featured = PeakSignalNoiseRatio()
+        self.ssim_featured = StructuralSimilarityIndexMeasure()
+        # self.lpips_featured = LearnedPerceptualImagePatchSimilarity()
 
     def forward(self, x: torch.Tensor):
         return self.net(x)
+
+    # def setup(self, stage="fit"):
+    #     weights = torch.load("/workspace/logs/mlflow/mlruns/366200486369581964/60dc9efc2894477098610049ea2489c3/checkpoints/epoch=19-step=1400.ckpt")
+
+    #     state_dict = weights["state_dict"]
+    #     model_dict = self.net.state_dict()
+    #     update_weights = [k.split(".", 1)[1] for k in model_dict.keys()]
+    #     update_dict = {k: v for k, v in state_dict.items() if k in update_weights}
+    #     model_dict.update(update_dict)
+
+    #     self.net.load_state_dict(model_dict)
+    #     print("\nload weights\n")
+
+    def calc_loss_suffix(self, suffix, batch_suffixes, targets, y_hat):
+        mask = get_mask(suffix, batch_suffixes)
+        loss = self.criterion(y_hat[mask], targets[mask])
+        if suffix == "N1.5":
+            self.N15_loss(loss)
+            self.log("val/N1.5_loss", self.N15_loss, on_step=False, on_epoch=True, prog_bar=True)
+        elif suffix == "N1":
+            self.N1_loss(loss)
+            self.log("val/N1_loss", self.N1_loss, on_step=False, on_epoch=True, prog_bar=True)
+        elif suffix == "0":
+            self._0_loss(loss)
+            self.log("val/0_loss", self._0_loss, on_step=False, on_epoch=True, prog_bar=True)
+        elif suffix == "P1":
+            self.P1_loss(loss)
+            self.log("val/P1_loss", self.P1_loss, on_step=False, on_epoch=True, prog_bar=True)
+        elif suffix == "P1.5":
+            self.P15_loss(loss)
+            self.log("val/P1.5_loss", self.P15_loss, on_step=False, on_epoch=True, prog_bar=True)
+
+        loss = self.criterion(y_hat, targets)
+        return loss
 
     def on_train_start(self):
         # by default lightning executes validation step sanity checks before training starts,
@@ -50,13 +106,18 @@ class UnetModule(LightningModule):
         self.val_loss.reset()
 
     def model_step(self, batch: Any):
-        x, y = batch
+        x = batch[0]
+        y = batch[1]
+
         y_hat = self.forward(x)
         loss = self.criterion(y_hat, y)
         return loss, y, y_hat
 
     def val_model_step(self, batch: Any):
-        x, y = batch
+        x = batch[0]
+        y = batch[1]
+        y_hat = self.forward(x)
+
         y_hat = self.forward(x)
         loss = self.criterion(y_hat, y)
         return loss, y, y_hat
@@ -76,7 +137,22 @@ class UnetModule(LightningModule):
     def validation_step(self, batch: Any, batch_idx: int):
         loss, targets, y_hat = self.val_model_step(batch)
 
+        batch_suffixes = batch[2][1]
+
+        for suffix in self.suffixes:
+            self.calc_loss_suffix(suffix, batch_suffixes, targets, y_hat)
+
         # update and log metrics
+        mask = get_mask(self.suffixes_featured, batch_suffixes)
+        self.ssim_featured(targets[mask], y_hat[mask])
+        self.log("val/ssim_featured", self.ssim_featured, on_step=False, on_epoch=True, prog_bar=True)
+
+        self.psnr_featured(targets[mask], y_hat[mask])
+        self.log("val/psnr_featured", self.psnr_featured, on_step=False, on_epoch=True, prog_bar=True)
+
+        # self.lpips_featured(targets[mask], y_hat[mask])
+        # self.log("val/lpips_featured", self.lpips_featured, on_step=False, on_epoch=True, prog_bar=True)
+
         self.val_loss(loss)
         self.log("val/loss", self.val_loss, on_step=False, on_epoch=True, prog_bar=True)
 

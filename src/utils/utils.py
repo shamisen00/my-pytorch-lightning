@@ -300,6 +300,8 @@ def normalize(im):
     im[1:, :, :] = (im[1:, :, :] - min_input) * (max_output - min_output) / (max_input - min_input) + min_output
     return im
 
+def get_mask(suffix: list[str], batch_suffixes):
+    return [x in suffix for x in batch_suffixes]
 
 def de_normalize(im):
     im[0, :, :] = im[0, :, :] * 100
