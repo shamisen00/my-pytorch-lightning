@@ -1,0 +1,287 @@
+# %%
+from torchvision.transforms import transforms
+import torch
+import torch.nn as nn
+
+from src.models.components.backbone import EfficientNetB3
+
+class Net(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.image_size = 128
+        self.resize = transforms.Resize(self.image_size)
+
+        self.patch_size = 300
+
+        feature_size = 256
+        self.hidden_ch = [128, 128, 64, 32]
+
+        self.backbone = EfficientNetB3(out_ch=feature_size)
+
+        image_ch = 3
+
+        self.linear1 = nn.Conv2d(feature_size, self.hidden_ch[0], kernel_size=1)
+        self.conv1 = nn.Conv2d(image_ch, self.hidden_ch[0], kernel_size=1)
+        self.linear2 = nn. Conv2d(self.hidden_ch[0], self.hidden_ch[1], kernel_size=1)
+        self.conv2 = nn.Conv2d(self.hidden_ch[0], self.hidden_ch[1], kernel_size=1)
+        self.linear3 = nn.Conv2d(self.hidden_ch[1], self.hidden_ch[2], kernel_size=1)
+        self.conv3 = nn.Conv2d(self.hidden_ch[1], self.hidden_ch[2], kernel_size=1)
+        self.linear4 = nn. Conv2d(self.hidden_ch[2], self.hidden_ch[3], kernel_size=1)
+        self.conv4 = nn.Conv2d(self.hidden_ch[2], self.hidden_ch[3], kernel_size=1)
+        self.relu = nn.ReLU(inplace=True)
+
+        self.conv_final = nn.Conv2d(in_channels=self.hidden_ch[3], out_channels=3, kernel_size=1)
+
+    def forward(self, x: torch.Tensor):
+        feature = self.backbone(self.resize(x))
+
+        b, c, h, w = x.shape
+
+        patches = self.split_into_256patches(x)
+
+        # 各パッチをモデルに入力し、出力を得る
+        outputs = []
+
+        for patch in patches:
+            images = patch
+
+            f = feature.view(feature.size(0), -1, 1, 1)  # ブロードキャストできるようにshapeを変換
+            f = self.linear1(f)
+            patch = self.conv1(patch) + f
+            patch = self.relu(patch)
+
+            # second
+            f = self.linear2(f)
+            patch = self.conv2(patch) + f
+            patch = self.relu(patch)
+
+            # third
+            f = self.linear3(f)
+            patch = self.conv3(patch) + f
+            patch = self.relu(patch)
+
+            # forth
+            f = self.linear4(f)
+            patch = self.conv4(patch) + f
+            patch = self.relu(patch)
+
+            patch = self.conv_final(patch)
+            patch = patch + images
+
+            patch = torch.clamp(patch, 0, 1)  # (B, C, H, W)
+
+            outputs.append(patch)
+
+        # 出力を再結合して全体の結果を得る
+        final_output = self.combine_256patches(outputs, h, w)
+
+        return final_output
+    
+    def split_into_256patches(self, x):
+        # 入力画像の形状を取得
+        b, c, h, w = x.shape
+        
+        # パッチの高さと幅を固定
+        h_patch, w_patch = 256, 256
+        
+        # 縦横のパッチの数を計算 (余りも考慮)
+        h_num = -(-h // h_patch)  # ceil(h / h_patch)
+        w_num = -(-w // w_patch)  # ceil(w / w_patch)
+        
+        patches = []
+        for i in range(h_num):
+            for j in range(w_num):
+                patch = x[:, :, i*h_patch:min((i+1)*h_patch, h), j*w_patch:min((j+1)*w_patch, w)]
+                patches.append(patch)
+        
+        return patches
+
+    def combine_256patches(self, patches, h, w):
+        h_num = -(-h // 256)
+        w_num = -(-w // 256)
+
+        rows = []
+        for i in range(0, len(patches), w_num):
+            row = torch.cat(patches[i:i+w_num], dim=3)  # パッチを水平方向に結合
+            rows.append(row)
+        
+        combined = torch.cat(rows, dim=2)  # 結合された行を垂直方向に結合
+        
+        return combined
+
+# %%
+class RefinedPixelwiseCachedNet(nn.Module):
+    def __init__(self, n=4, cache_size=10000):
+        super(RefinedPixelwiseCachedNet, self).__init__()
+        
+        self.image_size = 128
+        self.resize = transforms.Resize(self.image_size)
+        feature_size = 256
+        self.hidden_ch = [128, 128, 64, 32]
+        self.backbone = EfficientNetB3(out_ch=feature_size)
+        image_ch = 3
+        self.n = 10
+
+        self.linear1 = nn.Conv2d(feature_size, self.hidden_ch[0], kernel_size=1)
+        self.conv1 = nn.Conv2d(image_ch, self.hidden_ch[0], kernel_size=1)
+        self.linear2 = nn.Conv2d(self.hidden_ch[0], self.hidden_ch[1], kernel_size=1)
+        self.conv2 = nn.Conv2d(self.hidden_ch[0], self.hidden_ch[1], kernel_size=1)
+        self.linear3 = nn.Conv2d(self.hidden_ch[1], self.hidden_ch[2], kernel_size=1)
+        self.conv3 = nn.Conv2d(self.hidden_ch[1], self.hidden_ch[2], kernel_size=1)
+        self.linear4 = nn.Conv2d(self.hidden_ch[2], self.hidden_ch[3], kernel_size=1)
+        self.conv4 = nn.Conv2d(self.hidden_ch[2], self.hidden_ch[3], kernel_size=1)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv_final = nn.Conv2d(in_channels=self.hidden_ch[3], out_channels=3, kernel_size=1)
+        
+        # Cache for pixel values
+        self.pixel_cache = {}
+        self.cache_size = cache_size
+        self.n = n
+
+    def forward(self, x: torch.Tensor):
+        feature = self.backbone(self.resize(x))
+        b, c, h, w = x.shape
+        f = feature.view(feature.size(0), -1, 1, 1)
+        
+        # Use cache during inference for the main processing block
+        x = self.discretize_input(x)
+        x = self.main_processing_with_cache(x, f)
+        x = torch.clamp(x, 0, 1)
+        
+        return x
+
+    # def main_processing_with_cache(self, x, f):
+    #     flat_x = x.view(-1)
+    #     output_values = []
+
+    #     # Iterate over each pixel value
+    #     for pixel in flat_x:
+    #         pixel_key = pixel.item()
+
+    #         if pixel_key in self.pixel_cache:
+    #             output_values.append(self.pixel_cache[pixel_key])
+    #         else:
+    #             # Reshape pixel to have necessary dimension for processing
+    #             print(pixel)
+    #             pixel_input = pixel.view(1, 1, 1, 1)
+    #             output_pixel = self.main_processing_block(pixel_input, f).item()
+                
+    #             output_values.append(output_pixel)
+                
+    #             if len(self.pixel_cache) >= self.cache_size:
+    #                 self.pixel_cache.pop(next(iter(self.pixel_cache)))
+    #             self.pixel_cache[pixel_key] = output_pixel
+
+    #     return torch.tensor(output_values).view(x.shape)
+
+    def main_processing_with_cache(self, x, f):
+        output_values = []
+
+        # Iterate over each pixel in RGB format
+        for i in range(x.shape[2]):
+            for j in range(x.shape[3]):
+                pixel_rgb = x[:, :, i, j]
+                pixel_key = tuple(pixel_rgb[0].tolist())  # Convert the RGB values to a tuple for hashing
+
+                if pixel_key in self.pixel_cache:
+                    output_values.append(self.pixel_cache[pixel_key])
+                else:
+                    pixel_input = pixel_rgb.unsqueeze(2).unsqueeze(3)
+                    output_pixel = self.main_processing_block(pixel_input, f).squeeze(2, 3)
+                    
+                    output_values.append(output_pixel)
+                    
+                    if len(self.pixel_cache) >= self.cache_size:
+                        self.pixel_cache.pop(next(iter(self.pixel_cache)))
+                    self.pixel_cache[pixel_key] = output_pixel
+        self.pixel_cache = {}
+        return torch.stack(output_values, dim=2).view(x.shape)
+
+    def main_processing_block(self, x, f):
+        f = self.linear1(f)
+        x = self.conv1(x) + f
+        x = self.relu(x)
+
+        f = self.linear2(f)
+        x = self.conv2(x) + f
+        x = self.relu(x)
+
+        f = self.linear3(f)
+        x = self.conv3(x) + f
+        x = self.relu(x)
+
+        f = self.linear4(f)
+        x = self.conv4(x) + f
+        x = self.relu(x)
+
+        x = self.conv_final(x)
+        
+        return x
+    
+    def discretize_input(self, x):
+        """Discretize the input RGB values."""
+        step = 1.0 / self.n
+        return (x // step) * step
+
+# %%
+from PIL import Image
+import torch
+
+x = Image.open("{}").convert("RGB")
+
+#x = torch.randn(1, 3, size+35, size+13, dtype=torch.float32)
+x = transforms.ToTensor()(x).unsqueeze(0)
+#x = torch.ones(1, 3, 100, 100, dtype=torch.float32) /2
+#x = torch.randn(1, 3, 600, 600, dtype=torch.float32)
+c = RefinedPixelwiseCachedNet().eval()
+m = Net().eval()
+# %%
+import torch
+
+model = Net().eval()
+size = 601
+x = torch.randn(1, 3, size, size, dtype=torch.float32)
+
+torch.onnx.export(model,
+                  x,
+                  f"{size}.onnx",
+                  input_names=["img"],
+                  output_names=["output"],
+                  dynamic_axes={"img": {2: "height", 3: "width"}, 'output': {2: "height", 3: "width"}})
+
+# %%
+import onnxruntime
+import numpy as np
+from torchvision.transforms import transforms
+from PIL import Image
+
+sess_options = onnxruntime.SessionOptions()
+sess_options.enable_profiling = True
+
+session = onnxruntime.InferenceSession(f"{size}.onnx", providers=["CPUExecutionProvider"], sess_options=sess_options)
+
+x = Image.open("/workspace/data/validation/GT_IMAGES/a0398-IMG_5829.jpg").convert("RGB")
+
+#x = torch.randn(1, 3, size+35, size+13, dtype=torch.float32)
+x = transforms.ToTensor()(x).unsqueeze(0)
+y = x.detach().numpy()
+outs = session.run(None, {"img": y})
+
+
+prof_file = session.end_profiling()
+print(prof_file)
+# %%
+t = model(x)
+print(np.mean(abs(t.detach().numpy() - outs[0]))*255)
+print(torch.mean(abs(t-torch.from_numpy(outs[0])))*255)
+# %%
+to_pil = transforms.ToPILImage()
+output_image = to_pil(t.squeeze(0))
+output_image.show()
+
+output_tensor = torch.from_numpy(outs[0])
+output_tensor = output_tensor.squeeze(0)
+to_pil = transforms.ToPILImage()
+output_image = to_pil(output_tensor)
+output_image.show()
