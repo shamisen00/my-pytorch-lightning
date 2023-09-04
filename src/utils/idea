@@ -578,3 +578,71 @@ class CachedNet(nn.Module):
         scale_factor = 1 / 16
         quantized_value = (rgb_value / scale_factor).round() * scale_factor
         return quantized_value
+
+
+import torch
+import torch.nn as nn
+from itertools import product
+
+class CachedNet(nn.Module):
+    def __init__(self):
+        super(CachedNet, self).__init__()
+        self.model = Net()
+        self.image_size = 128
+        self.resize = transforms.Resize((self.image_size, self.image_size))
+
+    def forward(self, patch):
+        _, _, H, W = patch.shape
+
+        cache = {}
+        values = torch.linspace(0, 1, 17)
+        combinations = torch.cartesian_prod(values, values, values)
+
+        outputs = self.model(combinations.unsqueeze(2).unsqueeze(3), self.resize(patch))
+        for i, pixel in enumerate(combinations):
+            key = str(pixel[0].item()) + str(pixel[1].item()) + str(pixel[2].item())
+            cache[key] = outputs[i]
+
+        # 全てのピクセルを離散化
+        quantized_patch = self.quantize(patch)
+
+        # 各ピクセルをキャッシュテーブルのキーとして使用
+        output_list = []
+        for h in range(H):
+            for w in range(W):
+                pixel = quantized_patch[0, :, h, w]
+                key = str(pixel[0].item()) + str(pixel[1].item()) + str(pixel[2].item())
+                output_list.append(cache[key])
+        output = torch.stack(output_list).reshape(1, 3, H, W)
+        
+        return output
+
+    def quantize(self, rgb_value):
+        scale_factor = 1 / 16
+        quantized_value = (rgb_value / scale_factor).round() * scale_factor
+        return quantized_value
+    
+    def float_to_str(self, x):
+        return "{:.6f}".format(x)
+
+from PIL import Image
+import time
+model = CachedNet()
+s_model = torch.jit.script(model)
+
+s_model.save("your_model_name.pt")
+
+loaded_model = torch.jit.load("your_model_name.pt")
+x = Image.open("/workspace/data/resized_512/validation/GT_IMAGES/a0113-IMG_1129.jpg").convert("RGB")
+x = transforms.ToTensor()(x).unsqueeze(0)
+output = loaded_model(x)
+
+import torch
+import torchvision.models as models
+from torch.profiler import profile, record_function, ProfilerActivity
+model = CachedNet()
+with profile(activities=[ProfilerActivity.CPU], record_shapes=True) as prof:
+    with record_function("model_inference"):
+        model(x)
+
+print(prof.key_averages().table(sort_by="cpu_time_total", row_limit=10))
