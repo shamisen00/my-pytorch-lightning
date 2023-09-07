@@ -753,19 +753,18 @@ if __name__ == "__main__":
     result_pil.save("test.jpg")
 
 
-def build_cache(outputs: torch.Tensor, combinations: torch.Tensor) -> torch.Tensor: 
-    max_val: int = 16 
+def build_cache(outputs: torch.Tensor, combinations: torch.Tensor, max_val: int) -> torch.Tensor: 
     cache_size: int = max_val * max_val * max_val 
     cache: torch.Tensor = torch.zeros((cache_size, 3, outputs.shape[2], outputs.shape[3]))
 
     # ベクトル化されたインデックス計算
-    r_int = (combinations[:, 0] * (max_val - 1)).long()
-    g_int = (combinations[:, 1] * (max_val - 1)).long()
-    b_int = (combinations[:, 2] * (max_val - 1)).long()
-    
+    r_int = (combinations[:, 0, 0, 0] * (max_val - 1)).long()
+    g_int = (combinations[:, 1, 0, 0] * (max_val - 1)).long()
+    b_int = (combinations[:, 2, 0, 0] * (max_val - 1)).long()
+
     indices = r_int * max_val**2 + g_int * max_val + b_int
-    
+
     # インデックスを使用してcacheを更新
-    cache[indices] = outputs
+    cache[indices, :, :, :] = outputs.view(-1, 3, 1, 1)
 
     return cache
